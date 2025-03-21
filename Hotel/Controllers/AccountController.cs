@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
+using System.Security.Claims;
 
 namespace Hotel.Controllers
 {
@@ -32,9 +34,27 @@ namespace Hotel.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, true, false);
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
                 if (result.Succeeded)
                 {
+                    var roles = await _signInManager.UserManager.GetRolesAsync(user);
+
+                    List<Claim> claims = new List<Claim>();
+
+                    claims.Add(new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"));
+
+                    claims.Add(new Claim(ClaimTypes.Email, user.Email));
+
+                    foreach (var role in roles)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, role));
+                    }
+
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity));
                     return RedirectToAction("Index", "Home");
                 }
                 ModelState.AddModelError("", "Login fallito");
@@ -54,16 +74,15 @@ namespace Hotel.Controllers
             {
                 var newUser = new ApplicationUser()
                 {
-                    Email = model.Email, // Imposta l'email dell'utente
-                    UserName = model.Email, // Imposta il nome utente uguale all'email
-                    FirstName = model.FirstName, // Imposta il nome dell'utente
-                    LastName = model.LastName, // Imposta il cognome dell'utente
-                    BirthDate = model.BirthDate, // Imposta la data di nascita dell'utente
+                    Email = model.Email,
+                    UserName = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName, 
+                    BirthDate = model.BirthDate,
                 };
                 var result = await _userManager.CreateAsync(newUser, model.Password);
                 if (result.Succeeded)
                 {
-                    // Se il ruolo non esiste, lo creo
                     if (!await _roleManager.RoleExistsAsync(model.Role))
                     {
                         await _roleManager.CreateAsync(new ApplicationRole { Name = model.Role });

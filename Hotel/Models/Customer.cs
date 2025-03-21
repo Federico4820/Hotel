@@ -4,7 +4,6 @@ namespace Hotel.Models
 {
     public class Customer
     {
-        //definiamo le proprietà che rappresentano le colonne della tabella sul database
         [Key]
         public Guid CustomerId { get; set; }
 

@@ -1,0 +1,37 @@
+﻿@model IEnumerable<Hotel.Models.Reservation>
+@{
+    ViewData["Title"] = "Gestione Prenotazioni";
+}
+
+<h1 class="mt-4">Gestione Prenotazioni</h1>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Cliente</th>
+            <th>Camera</th>
+            <th>Data Inizio</th>
+            <th>Data Fine</th>
+            <th>Stato</th>
+            <th>Azioni</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pren in Model)
+        {
+            <tr>
+                <td>@pren.customer.Name @pren.customer.Surname</td>
+                <td>@pren.room.Number (@pren.room.Type)</td>
+                <td>@pren.StartDate.ToShortDateString()</td>
+                <td>@pren.EndDate.ToShortDateString()</td>
+                <td>@pren.</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@pren.ReservationId" class="btn btn-sm btn-primary">Modifica</a>
+                    <a asp-action="Delete" asp-route-id="@pren.ReservationId" class="btn btn-sm btn-danger">Elimina</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create" class="btn btn-success">Crea Nuova Prenotazione</a>
